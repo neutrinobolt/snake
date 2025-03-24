@@ -4,8 +4,7 @@
 import objects
 
 class Snegment(objects.Obj):
-    def __init__(self, xstart, ystart, time_to_live):
-        super().__init__(xstart, ystart)
+    def __init__(self, root, xstart, ystart, time_to_live):
+        super().__init__(root, xstart, ystart, fill_color="light green")
 
-        self.incolor = "light green"
         self.time_to_live = time_to_live

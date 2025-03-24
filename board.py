@@ -13,12 +13,12 @@ import time
 import tkinter as tk
 import objects as objs
 import snegments as sn
-import keyboard
+from pynput import keyboard as kb
 
 #Constants
 TIME_STEP = .1
 GRID_STEP = 30
-ACCEPTABLE_INPUTS = ["w","a,", "s", "d"]
+ACCEPTABLE_INPUTS = ["w", "a", "s", "d"]
 class Board:
     """Contains and manages all objects within board canvas."""
     def __init__(self,
@@ -48,18 +48,17 @@ class Board:
                                 fill= 'white',
                                 font=('Helvetica 10 bold')
                                 )
+        
+        self.start_button = tk.Button(self.window, 
+                                 text = "Play",
+                                 command = self.play)
+        self.start_button.pack()
 
         #Spawn snake head
-        self.head_init = objs.Obj(370, 200)
-        self.head = self.canvas.create_rectangle(self.head_init.x0, self.head_init.y0,
-                                                 self.head_init.x1, self.head_init.y1,
-                                                 fill= "light green")
+        self.head = objs.Obj(self.canvas, 370, 200, fill_color="light green")
 
         # Spawn apple
-        self.apple_init = objs.Obj(600, 200)
-        self.apple = self.canvas.create_rectangle(self.apple_init.x0, self.apple_init.y0,
-                                                  self.apple_init.x1, self.apple_init.y1,
-                                                  fill= "red")
+        self.apple = objs.Obj(self.canvas, 600, 200, fill_color="red")
 
         # Set movement direction
         self.move_current = self.stay_put # Snake doesn't start moving until a key is pressed
@@ -69,14 +68,22 @@ class Board:
             "a": self.move_left,
             "d": self.move_right
         }
+        self.key_press = None
 
         # Set game status
         self.is_alive = True
 
-        # Run the game
+        
+
+    def play(self):
+        print("Starting Game") #debug
+        listener = kb.Listener(on_press=self.on_press, on_release=self.on_release)
+        listener.start()
         while self.is_alive:
+            #print("running game...")
             time.sleep(TIME_STEP)
             self.step()
+
 
     def reset_apple(self):
         """removes apple from current location, adds 1 to length, spawn apple
@@ -86,47 +93,63 @@ class Board:
     def step(self):
         """Runs every time step interval. 
         Move head and tail segments, check for collisions, check for apple"""
-        key_press = keyboard.read_key()
-        if key_press in ACCEPTABLE_INPUTS:
-            self.move_current = self.dir_funcs[key_press]
-            self.move_current()
+        print("Running step function") # Debug
 
+        self.move_current()
+        #print("moved") #debug
+
+        print(self.key_press) # debug
+        if  self.key_press in ACCEPTABLE_INPUTS:
+            print("key_press acceptable") # debug
+            #self.key_press = keyboard.read_key()
+            self.move_current = self.dir_funcs[self.key_press]
+            #print("move_current set") # debug
+
+    ### Movement functions
     def move_up(self):
         """create new snegment, move up one space"""
-        new_snegment = sn.Snegment(self.head_init.x0, self.head_init.y0, self.curr_score)
+        print("moving up") #debug
+        new_snegment = sn.Snegment(self.canvas, self.head.x0, self.head.y0, self.curr_score)
         self.tails.append(new_snegment)
 
-        current_coords = self.canvas.coords(self.head)
-        self.canvas.move(self.head, current_coords[0] - GRID_STEP, current_coords[1])
+        self.canvas.move(self.head.body, 0, 0 - GRID_STEP)
+        self.canvas.update()
 
     def move_down(self):
         """create new snegment, move down one space"""
-        new_snegment = sn.Snegment(self.head_init.x0, self.head_init.y0, self.curr_score)
+        print("moving down") #debug
+        new_snegment = sn.Snegment(self.canvas, self.head.x0, self.head.y0, self.curr_score)
         self.tails.append(new_snegment)
 
-        current_coords = self.canvas.coords(self.head)
-        self.canvas.move(self.head, current_coords[0] + GRID_STEP, current_coords[1])
+        self.canvas.move(self.head.body, 0, GRID_STEP)
+        self.canvas.update()
 
     def move_left(self):
         """create new snegment, move left one space"""
-        new_snegment = sn.Snegment(self.head_init.x0, self.head_init.y0, self.curr_score)
+        print("moving left") #debug
+        new_snegment = sn.Snegment(self.canvas, self.head.x0, self.head.y0, self.curr_score)
         self.tails.append(new_snegment)
 
-        current_coords = self.canvas.coords(self.head)
-        self.canvas.move(self.head, current_coords[0], current_coords[1] - GRID_STEP)
+        self.canvas.move(self.head.body, 0 - GRID_STEP, 0)
+        self.canvas.update()
 
     def move_right(self):
         """create new snegment, move right one space"""
-        new_snegment = sn.Snegment(self.head_init.x0, self.head_init.y0, self.curr_score)
+        print("moving right") #debug
+        new_snegment = sn.Snegment(self.canvas, self.head.x0, self.head.y0, self.curr_score)
         self.tails.append(new_snegment)
 
-        current_coords = self.canvas.coords(self.head)
-        self.canvas.move(self.head, current_coords[0], current_coords[1] + GRID_STEP)
+        self.canvas.move(self.head.body, GRID_STEP, 0)
+        self.canvas.update()
 
     def stay_put(self):
         """Run on board opening. should be empty"""
-        new_snegment = sn.Snegment(self.head_init.x0, self.head_init.y0, self.curr_score)
-        self.tails.append(new_snegment)
+        print("staying put")
+        pass
 
-        current_coords = self.canvas.coords(self.head)
-        self.canvas.move(self.head, current_coords[0] - GRID_STEP, current_coords[1])
+    ### Keyboard listening funcs
+    def on_press(self, key):
+        self.key_press = key.char
+
+    def on_release(self):
+        pass

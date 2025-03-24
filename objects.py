@@ -9,6 +9,8 @@
     - Death timer
 """
 
+import tkinter as tk
+
 class Obj():
     """Contains: 
     Instructions to create snegment
@@ -16,13 +18,21 @@ class Obj():
     """
     def __init__(
             self,
+            root: tk.Canvas,
             xstart:int,
-            ystart:int
+            ystart:int,
+            fill_color:str
                 ):
         
         self.x0 = xstart
         self.y0 = ystart
+        self.root = root
 
         #Set x and y coords
         self.x1 = self.x0 + 25
         self.y1 = self.y0 + 25
+
+        self.body = self.root.create_rectangle(self.x0, self.y0,
+                                   self.x1, self.y1, fill= fill_color
+                                   )
+
