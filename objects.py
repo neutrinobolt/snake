@@ -33,6 +33,11 @@ class Obj():
         self.y1 = self.y0 + 25
 
         self.body = self.root.create_rectangle(self.x0, self.y0,
-                                   self.x1, self.y1, fill= fill_color
-                                   )
+                                               self.x1, self.y1,
+                                               fill= fill_color)
+        
+    def delete(self):
+        """Cleanly delete all object data"""
+        self.root.delete(self.body)
+        del self
 

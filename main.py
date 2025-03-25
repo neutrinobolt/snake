@@ -3,9 +3,6 @@
 
 
 import board
-from pynput import keyboard as kb
-
-
 
 def main ():
     """Main running function."""
@@ -16,7 +13,7 @@ def main ():
     #Create board and run board
     play_board = board.Board(hi_score)
     play_board.window.mainloop()
-    print("Past mainloop")
+    #print("Past mainloop") # debug
 
 if __name__ == "__main__":
     main()
