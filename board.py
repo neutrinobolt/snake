@@ -10,11 +10,11 @@ Board has:
 """
 
 import time
+import random
 import tkinter as tk
 import objects as objs
 import snegments as sn
 from pynput import keyboard as kb
-import random
 
 #Constants
 TIME_STEP = .1
@@ -49,11 +49,16 @@ class Board:
                                 fill= 'white',
                                 font=('Helvetica 10 bold')
                                 )
-        
+
         self.start_button = tk.Button(self.window, 
                                  text = "Play",
                                  command = self.play)
         self.start_button.pack()
+
+        self.end_button = tk.Button(self.window, 
+                                    text = "Quit",
+                                    command = self.quit)
+        self.end_button.pack()
 
         #Spawn snake head
         self.head = objs.Obj(self.canvas, 375, 200, fill_color="light green")
@@ -73,29 +78,37 @@ class Board:
 
         # Set game status
         self.is_alive = True
-
         
+        self.listener = kb.Listener(on_press=self.on_press, on_release=self.on_release)
+        self.listener.start()
 
     def play(self):
-        #print("Starting Game") #debug
-        #setup event listener
-        listener = kb.Listener(on_press=self.on_press, on_release=self.on_release)
-        listener.start()
+        # print("Starting Game") #debug
 
         #Run game
         while self.is_alive:
-            #print("running game...")
+            #print("stepping...") #debug
             time.sleep(TIME_STEP)
             self.step()
 
         #Game end
         self.move_current = self.stay_put
+
         #Prep for reset
         self.start_button.configure(text=f'Final score: {self.curr_score}. Play again?')
-        for snegment in self.tails:
-            snegment.delete()
-        self.canvas.moveto(self.head.body, 375, 200)
-        self.canvas.moveto(self.apple.body, 600, 200)
+        while len(self.tails) > 0:
+            for snegment in self.tails:
+                snegment.time_to_live -= 1
+                if snegment.time_to_live <= 0:
+                    self.tails.pop(self.tails.index(snegment))
+                    snegment.unalive()
+        if len(self.tails) != 0:
+            print("There are still snegments.")
+
+        self.canvas.moveto(self.head.body, 374, 199)
+        # new_head_coords = self.canvas.coords(self.head.body) #debug
+        # print(f'Head coords: {new_head_coords[0]}, {new_head_coords[1]}') #debug
+        self.canvas.moveto(self.apple.body, 599, 199)
         #Update high score
         if self.curr_score > self.hscore:
             self.hscore = self.curr_score
@@ -103,7 +116,15 @@ class Board:
                                       text= f'High score: {self.hscore}')
             with open('snake/hscore.txt', "w", encoding= "UTF-8") as infile:
                 infile.write(f'{self.hscore}')
+        self.curr_score = 0
+        self.canvas.itemconfigure(self.cscore_field,
+                                  text = f'Current Score: {self.curr_score}')
+        self.is_alive = True
+        # print("Game ended.") #debug
 
+    def quit(self):
+        self.listener.stop()
+        self.window.destroy()
 
     def reset_apple(self):
         """removes apple from current location, adds 1 to length, spawn apple
@@ -153,7 +174,7 @@ class Board:
             snegment.time_to_live -= 1
             if snegment.time_to_live < 0:
                 self.tails.pop(self.tails.index(snegment))
-                snegment.delete()
+                snegment.unalive()
         
         #Death conditions
         head_coords = self.canvas.coords(self.head.body)
@@ -170,6 +191,7 @@ class Board:
         apple_coords = self.canvas.coords(self.apple.body)
         if head_coords[0] == apple_coords[0] and head_coords[1] == apple_coords[1]:
             self.reset_apple()
+
 
     ### Movement functions
     def move_up(self):

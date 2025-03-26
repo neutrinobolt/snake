@@ -7,7 +7,7 @@ import board
 def main ():
     """Main running function."""
     #Get previous high score
-    with open('snake/hscore.txt', "r", encoding= "UTF-8") as infile:
+    with open('hscore.txt', "r", encoding= "UTF-8") as infile:
         hi_score = infile.read()
 
     #Create board and run board

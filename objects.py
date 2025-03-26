@@ -36,8 +36,12 @@ class Obj():
                                                self.x1, self.y1,
                                                fill= fill_color)
         
-    def delete(self):
+    def unalive(self):
         """Cleanly delete all object data"""
         self.root.delete(self.body)
+        del self.x0
+        del self.y0
+        del self.x1
+        del self.y1
         del self
 
