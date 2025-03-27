@@ -15,6 +15,9 @@ Last updated: 3/27/25
 - Fix bug: As is, snake can be made to move in opposite direction of current
 direction. This leads to immediately losing. Fix: make it so snake can't go
 backwards.
+- Fix bug: snake immediately begins moving in last selected direction on
+game reset. Fix: Either set so snake stays put or always starts moving right
+(towards first apple).
 - Simplify installation process
 
 ### Additional functions
