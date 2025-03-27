@@ -1,20 +1,26 @@
 #!/usr/bin/python3
 
 """
-    File contains instructions for apple, snegment and tail classes.
-    Snegment:
-    - Canvas appearance
-    - Location
-    tail:
-    - Death timer
+File contains instructions for all objects on canvas.
 """
 
 import tkinter as tk
 
 class Obj():
-    """Contains: 
-    Instructions to create snegment
-    Location
+    """
+    Args:
+        - root: canvas object
+        - xstart: int
+        - ystart: int
+        - fill_color: string
+    Variables: 
+        - x0:int
+        - y0:int
+        - x1:int
+        - y1:int
+        - body: canvas rectangle
+    Functions:
+        - unalive
     """
     def __init__(
             self,
@@ -23,7 +29,7 @@ class Obj():
             ystart:int,
             fill_color:str
                 ):
-        
+
         self.x0 = xstart
         self.y0 = ystart
         self.root = root
@@ -35,7 +41,7 @@ class Obj():
         self.body = self.root.create_rectangle(self.x0, self.y0,
                                                self.x1, self.y1,
                                                fill= fill_color)
-        
+
     def unalive(self):
         """Cleanly delete all object data"""
         self.root.delete(self.body)

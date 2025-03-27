@@ -1,11 +1,20 @@
 #!/usr/bin/python3
 """
-File containing board and apple class definitions.
-Board has:
-    - all black canvas with white lines outlining play map
-    - Space underneath canvas for displaying current and high score
-    - Snake object connected
-    - Step function
+File containing board class definition.
+- Dependencies:
+    - pynput (exterior library)
+    - objects.py
+    - snegments.py
+- Constants:
+    - TIME_STEP:float
+    - GRID_STEP:int
+    - ACCEPTABLE_INPUTS:list of strings
+- Board:
+    - All black canvas with white lines outlining play map
+    - Space under map on canvas for displaying current and high score
+    - Space underneath canvas for play and quit buttons
+    - Snake object
+    - Step and move functions
     - Apple generation function
 """
 
@@ -21,7 +30,40 @@ TIME_STEP = .1
 GRID_STEP = 25
 ACCEPTABLE_INPUTS = ["w", "a", "s", "d"]
 class Board:
-    """Contains and manages all objects within board canvas."""
+    """
+    Contains and manages all objects within board canvas.
+    - Args:
+        - hscore_current:string
+    - Variables:
+        - hscore:int
+        - curr_score:int
+        - tails:list of snegments
+        - window:tk window
+        - canvas:tk canvas
+        - field: rectangle
+        - cscore_field: text field
+        - hscore_field: text field
+        - start_button: tk button
+        - end-button: tk button
+        - head: objects obj
+        - apple: objects obj
+        - move_current: function
+        - dir_funcs: dictionary
+        - key_press: string
+        - is_alive: boolean
+        - listener: pynput keyboard listener
+    - Functions:
+        - play
+        - quit
+        - reset_apple
+        - step
+        - move_up
+        - move_down
+        - move_left
+        - move_right
+        - stay_put
+        - on_press
+    """
     def __init__(self,
                  hscore_current):
 
@@ -50,12 +92,12 @@ class Board:
                                 font=('Helvetica 10 bold')
                                 )
 
-        self.start_button = tk.Button(self.window, 
+        self.start_button = tk.Button(self.window,
                                  text = "Play",
                                  command = self.play)
         self.start_button.pack()
 
-        self.end_button = tk.Button(self.window, 
+        self.end_button = tk.Button(self.window,
                                     text = "Quit",
                                     command = self.quit)
         self.end_button.pack()
@@ -78,16 +120,24 @@ class Board:
 
         # Set game status
         self.is_alive = True
-        
-        self.listener = kb.Listener(on_press=self.on_press, on_release=self.on_release)
+
+        self.listener = kb.Listener(on_press=self.on_press)
         self.listener.start()
 
     def play(self):
-        # print("Starting Game") #debug
+        """
+        Main gameplay loop.
+        - run step() every time-step until a collision occurs
+        - Reset game:
+            - Show score on play button
+            - Clear out self.tails
+            - Put head and apple back in original locations
+            - reset current score to zero
+            - set is_alive back to true
+        """
 
         #Run game
         while self.is_alive:
-            #print("stepping...") #debug
             time.sleep(TIME_STEP)
             self.step()
 
@@ -106,8 +156,6 @@ class Board:
             print("There are still snegments.")
 
         self.canvas.moveto(self.head.body, 374, 199)
-        # new_head_coords = self.canvas.coords(self.head.body) #debug
-        # print(f'Head coords: {new_head_coords[0]}, {new_head_coords[1]}') #debug
         self.canvas.moveto(self.apple.body, 599, 199)
         #Update high score
         if self.curr_score > self.hscore:
@@ -120,24 +168,24 @@ class Board:
         self.canvas.itemconfigure(self.cscore_field,
                                   text = f'Current Score: {self.curr_score}')
         self.is_alive = True
-        # print("Game ended.") #debug
 
     def quit(self):
+        """Ends game, closes window"""
         self.listener.stop()
         self.window.destroy()
 
     def reset_apple(self):
-        """removes apple from current location, adds 1 to length, spawn apple
-        in new location"""
-        #print("Hit apple") #debug
+        """
+        - Add 1 to score
+        - Move apple to random open location
+        """
         # Add 1 to score
         self.curr_score += 1
-        
+
         #Get new random coordinates, make sure they don't overlap with tail
         while True:
             new_x = random.randint(1, 30) * 25
             new_y = random.randint(1, 20) * 25
-            #print("New apple x: ", {new_x}, ", New apple y: ", {new_y}) # debug
             collisions = 0
             for snegment in self.tails:
                 sneg_coords = self.canvas.coords(snegment.body)
@@ -145,29 +193,29 @@ class Board:
                     collisions += 1
             if collisions == 0:
                 break
-        
-        self.canvas.itemconfigure(self.cscore_field, 
+
+        self.canvas.itemconfigure(self.cscore_field,
                                   text=f'Current score: {self.curr_score}')
-        
+
         # Set apple coords to new coords
         self.canvas.moveto(self.apple.body, new_x - 1, new_y - 1)
-        # print("Apple new coords: ",{self.canvas.coords(self.apple.body)[0]},", " ,
-        #       {self.canvas.coords(self.apple.body)[1]}) #debug
 
     def step(self):
-        """Runs every time step interval. 
-        Move head and decrement ttl on tail segments, check for collisions,
-        check for apple"""
-        #print("Running step function") # Debug
+        """
+        Runs every time step interval. 
+        - Update move_current
+        - Move head
+        - Update tail:
+            - Decrement ttl on snegments
+            - Kill dead snegments
+        - check for collisions
+        - check for apple
+        """
 
-        #print(self.key_press) # debug
         if  self.key_press in ACCEPTABLE_INPUTS:
-            #print("key_press acceptable") # debug
             self.move_current = self.dir_funcs[self.key_press]
-            #print("move_current set") # debug
 
         self.move_current()
-        #print("moved") #debug
 
         #Decrement ttl on all snegments, remove ones with tt -1 or less
         for snegment in self.tails:
@@ -175,7 +223,7 @@ class Board:
             if snegment.time_to_live < 0:
                 self.tails.pop(self.tails.index(snegment))
                 snegment.unalive()
-        
+
         #Death conditions
         head_coords = self.canvas.coords(self.head.body)
         #Leave field boundaries
@@ -186,17 +234,15 @@ class Board:
             sneg_coords = self.canvas.coords(snegment.body)
             if head_coords[0] == sneg_coords[0] and head_coords[1] == sneg_coords[1]:
                 self.is_alive = False
-        
+
         # Check for apple
         apple_coords = self.canvas.coords(self.apple.body)
         if head_coords[0] == apple_coords[0] and head_coords[1] == apple_coords[1]:
             self.reset_apple()
 
-
     ### Movement functions
     def move_up(self):
         """create new snegment, move up one space"""
-        #print("moving up") #debug
         #Get head current position
         head_coords = self.canvas.coords(self.head.body)
 
@@ -210,7 +256,6 @@ class Board:
 
     def move_down(self):
         """create new snegment, move down one space"""
-        #print("moving down") #debug
         #Get head current position
         head_coords = self.canvas.coords(self.head.body)
 
@@ -223,7 +268,6 @@ class Board:
 
     def move_left(self):
         """create new snegment, move left one space"""
-        #print("moving left") #debug
         #Get head current position
         head_coords = self.canvas.coords(self.head.body)
 
@@ -236,7 +280,6 @@ class Board:
 
     def move_right(self):
         """create new snegment, move right one space"""
-        #print("moving right") #debug
         #Get head current position
         head_coords = self.canvas.coords(self.head.body)
 
@@ -249,14 +292,11 @@ class Board:
 
     def stay_put(self):
         """Run on board opening. should be empty"""
-        #print("staying put")
 
     ### Keyboard listening funcs
     def on_press(self, key):
+        """On key press, update self.key_press"""
         try:
             self.key_press = key.char
         except AttributeError:
             self.key_press = key
-
-    def on_release(self):
-        pass

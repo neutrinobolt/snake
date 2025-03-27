@@ -5,7 +5,10 @@
 import board
 
 def main ():
-    """Main running function."""
+    """Main running function.
+    - Get current score
+    - Create and run board
+    """
     #Get previous high score
     with open('hscore.txt', "r", encoding= "UTF-8") as infile:
         hi_score = infile.read()
