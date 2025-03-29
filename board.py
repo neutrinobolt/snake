@@ -28,7 +28,15 @@ from pynput import keyboard as kb
 #Constants
 TIME_STEP = .1
 GRID_STEP = 25
-ACCEPTABLE_INPUTS = ["w", "a", "s", "d"]
+ACCEPTABLE_INPUTS = ["w",
+                     "a",
+                     "s",
+                     "d",
+                     "Key.up",
+                     "Key.down",
+                     "Key.left",
+                     "Key.right"
+                     ]
 class Board:
     """
     Contains and manages all objects within board canvas.
@@ -114,12 +122,16 @@ class Board:
             "w": self.move_up,
             "s": self.move_down,
             "a": self.move_left,
-            "d": self.move_right
+            "d": self.move_right,
+            "Key.up": self.move_up,
+            "Key.down": self.move_down,
+            "Key.left": self.move_left,
+            "Key.right": self.move_right
         }
         self.key_press = None
 
         # Set game status
-        self.is_alive = True
+        self.is_alive = False
 
         self.listener = kb.Listener(on_press=self.on_press)
         self.listener.start()
@@ -137,11 +149,15 @@ class Board:
         """
 
         #Run game
+        print("Running Game") #debug
+        self.is_alive = True
         while self.is_alive:
+            print("In game loop") #debug
             time.sleep(TIME_STEP)
             self.step()
 
         #Game end
+        print("Game over.") #debug
         self.move_current = self.stay_put
 
         #Prep for reset
@@ -167,7 +183,6 @@ class Board:
         self.curr_score = 0
         self.canvas.itemconfigure(self.cscore_field,
                                   text = f'Current Score: {self.curr_score}')
-        self.is_alive = True
 
     def quit(self):
         """Ends game, closes window"""
@@ -212,6 +227,7 @@ class Board:
         - check for apple
         """
 
+        print(self.key_press) #debug
         if  self.key_press in ACCEPTABLE_INPUTS:
             self.move_current = self.dir_funcs[self.key_press]
 
@@ -299,4 +315,6 @@ class Board:
         try:
             self.key_press = key.char
         except AttributeError:
-            self.key_press = key
+            print(key)
+            self.key_press = str(key)
+            
